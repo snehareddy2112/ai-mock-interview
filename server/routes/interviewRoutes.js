@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+
 const authMiddleware = require("../middleware/authMiddleware");
 const InterviewSession = require("../models/InterviewSession");
 
@@ -48,6 +49,44 @@ router.get("/:id", authMiddleware, async (req, res) => {
     }
 
     res.json(session);
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Complete interview
+router.post("/:id/complete", authMiddleware, async (req, res) => {
+  try {
+    const session = await InterviewSession.findOne({
+      _id: req.params.id,
+      user: req.user,
+    });
+
+    if (!session) {
+      return res.status(404).json({ message: "Not found" });
+    }
+
+    if (session.questions.length === 0) {
+      return res.status(400).json({ message: "No questions attempted" });
+    }
+
+    const totalScore = session.questions.reduce(
+      (sum, q) => sum + (q.feedback?.score || 0),
+      0
+    );
+
+    const average = Math.round(totalScore / session.questions.length);
+
+    session.finalScore = average;
+    session.isCompleted = true;
+
+    await session.save();
+
+    res.json({
+      message: "Interview completed",
+      finalScore: average,
+    });
+
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }

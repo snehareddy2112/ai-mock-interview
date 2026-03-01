@@ -86,7 +86,7 @@ Return response in this exact JSON format:
       response.data.choices[0].message.content
     );
 
-    // Save Q&A to DB
+    // Save Q&A including nextQuestion
     await InterviewSession.findByIdAndUpdate(
       sessionId,
       {
@@ -98,6 +98,7 @@ Return response in this exact JSON format:
               score: parsed.score,
               strengths: parsed.strengths,
               improvements: parsed.improvements,
+              nextQuestion: parsed.nextQuestion,
             },
           },
         },

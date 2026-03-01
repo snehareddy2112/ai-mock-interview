@@ -41,6 +41,12 @@ export default function DashboardLayout({ children }) {
           >
             Start Interview
           </Link>
+          <Link
+  href="/dashboard/history"
+  className="px-4 py-2 rounded-lg hover:bg-gray-800 transition"
+>
+  History
+</Link>
 
           <button
             onClick={handleLogout}

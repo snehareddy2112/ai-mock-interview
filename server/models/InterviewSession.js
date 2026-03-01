@@ -2,23 +2,63 @@ const mongoose = require("mongoose");
 
 const interviewSchema = new mongoose.Schema(
   {
-    role: { type: String, required: true },
-    experienceLevel: { type: String, required: true },
-    skills: { type: String },
+    role: {
+      type: String,
+      required: true,
+    },
+
+    experienceLevel: {
+      type: String,
+      required: true,
+    },
+
+    skills: {
+      type: String,
+    },
 
     questions: [
       {
-        question: String,
-        answer: String,
+        question: {
+          type: String,
+        },
+
+        answer: {
+          type: String,
+        },
+
         feedback: {
-          score: Number,
-          strengths: [String],
-          improvements: [String],
+          score: {
+            type: Number,
+          },
+
+          strengths: [
+            {
+              type: String,
+            },
+          ],
+
+          improvements: [
+            {
+              type: String,
+            },
+          ],
+
+          nextQuestion: {
+            type: String,
+          },
         },
       },
     ],
 
-    finalScore: Number,
+    finalScore: {
+      type: Number,
+      default: 0,
+    },
+
+    isCompleted: {
+      type: Boolean,
+      default: false,
+    },
 
     user: {
       type: mongoose.Schema.Types.ObjectId,
