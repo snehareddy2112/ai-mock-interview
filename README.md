@@ -95,14 +95,6 @@ OpenRouter AI API
 
 ------------------------------------------------------------------------
 
-## 📂 Project Structure
-
-ai-mock-interview/ │ ├── client/ \# Next.js Frontend │ ├── src/app │ ├──
-src/lib │ └── ... │ ├── server/ \# Express Backend │ ├── models/ │ ├──
-routes/ │ ├── middleware/ │ └── server.js │ └── README.md
-
-------------------------------------------------------------------------
-
 ## ⚙️ Local Setup Instructions
 
 ### 1️⃣ Clone Repository
