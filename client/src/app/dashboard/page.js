@@ -1,78 +1,94 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import api from "@/lib/api";
+import Link from "next/link";
 
-export default function Home() {
-  const router = useRouter();
+export default function DashboardPage() {
+  const [sessions, setSessions] = useState([]);
 
-  const handleDemoLogin = async () => {
-    try {
-      const res = await api.post("/auth/login", {
-        email: "demo@aimock.com",
-        password: "Demo@123",
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        const res = await api.get("/interviews");
+        setSessions(res.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchSessions();
+  }, []);
+
+  const totalInterviews = sessions.length;
+
+  const totalQuestions = sessions.reduce(
+    (sum, s) => sum + s.questions.length,
+    0
+  );
+
+  const overallAverage = (() => {
+    let totalScore = 0;
+    let count = 0;
+
+    sessions.forEach((s) => {
+      s.questions.forEach((q) => {
+        if (q.feedback?.score) {
+          totalScore += q.feedback.score;
+          count++;
+        }
       });
+    });
 
-      localStorage.setItem("token", res.data.token);
-      router.push("/dashboard");
-
-    } catch (err) {
-      alert("Demo account not found. Please create demo user first.");
-    }
-  };
+    return count ? Math.round(totalScore / count) : 0;
+  })();
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center px-6">
+    <div className="text-white">
 
-      {/* Hero Content */}
-      <div className="text-center max-w-3xl">
-        <h1 className="text-5xl font-bold mb-6">
-          AI Mock Interview Assistant 🎤
-        </h1>
+      <h1 className="text-3xl font-bold mb-8">
+        Dashboard Overview
+      </h1>
 
-        <p className="text-gray-300 text-lg mb-10">
-          Practice interviews with AI. Get real-time feedback, performance
-          analytics, and improve your technical confidence.
-        </p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
 
-        <div className="flex gap-6 justify-center">
-          <button
-            onClick={() => router.push("/login")}
-            className="px-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 hover:scale-105 transition"
-          >
-            Login
-          </button>
-
-          <button
-            onClick={() => router.push("/register")}
-            className="px-8 py-3 rounded-xl border border-white/30 hover:bg-white/10 transition"
-          >
-            Create Account
-          </button>
+        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+          <h3 className="text-gray-400 text-sm">Total Interviews</h3>
+          <p className="text-3xl font-bold mt-2">
+            {totalInterviews}
+          </p>
         </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+          <h3 className="text-gray-400 text-sm">Questions Attempted</h3>
+          <p className="text-3xl font-bold mt-2">
+            {totalQuestions}
+          </p>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+          <h3 className="text-gray-400 text-sm">Overall Avg Score</h3>
+          <p className="text-3xl font-bold mt-2">
+            {overallAverage} / 10
+          </p>
+        </div>
+
       </div>
 
-      {/* Demo Floating Card */}
-      <div className="fixed bottom-8 right-8 bg-white/10 backdrop-blur-xl border border-white/20 p-6 rounded-2xl w-80 shadow-2xl">
-        <h2 className="text-lg font-semibold mb-3">
-          🚀 Instant Demo Access
-        </h2>
-
-        <p className="text-sm text-gray-300 mb-2">
-          Skip signup. Explore full functionality instantly.
-        </p>
-
-        <div className="text-sm text-gray-400 mb-4">
-          <p>Email: demo@aimock.com</p>
-          <p>Password: Demo@123</p>
-        </div>
-
-        <button
-          onClick={handleDemoLogin}
-          className="w-full py-2 rounded-lg bg-green-600 hover:bg-green-700 transition"
+      <div className="flex gap-4">
+        <Link
+          href="/dashboard/new"
+          className="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 hover:scale-105 transition"
         >
-          Try Demo Now
-        </button>
+          Start New Interview
+        </Link>
+
+        <Link
+          href="/dashboard/history"
+          className="px-6 py-3 rounded-lg border border-gray-600 hover:bg-gray-800 transition"
+        >
+          View History
+        </Link>
       </div>
 
     </div>
