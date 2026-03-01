@@ -12,12 +12,14 @@ const app = express();
 // Middleware
 app.use(express.json());
 
+// ✅ Proper CORS setup
 app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      process.env.FRONTEND_URL,
+      "https://ai-mock-interview-fawn-five.vercel.app",
     ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
 );
@@ -27,16 +29,16 @@ app.use("/api/auth", authRoutes);
 app.use("/api/interviews", interviewRoutes);
 app.use("/api/ai", aiRoutes);
 
-// MongoDB Connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.log(err));
-
 // Health check
 app.get("/", (req, res) => {
   res.send("API Running");
 });
+
+// MongoDB
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB Connected"))
+  .catch((err) => console.log(err));
 
 const PORT = process.env.PORT || 5000;
 
