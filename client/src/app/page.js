@@ -11,8 +11,9 @@ export default function Home() {
       const res = await api.post("/auth/login", {
         email: "demo@aimock.com",
         password: "Demo@123",
-      });
 
+      });
+     
       localStorage.setItem("token", res.data.token);
       router.push("/dashboard");
 
