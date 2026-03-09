@@ -99,7 +99,8 @@ OpenRouter AI API
 
 ### 1️⃣ Clone Repository
 
-git clone `<your-repo-url>`{=html} cd ai-mock-interview
+git clone `https://github.com/snehareddy2112/ai-mock-interview/` 
+cd ai-mock-interview
 
 ------------------------------------------------------------------------
 
@@ -109,7 +110,8 @@ cd server npm install
 
 Create `.env` file:
 
-MONGO_URI=your_mongodb_connection JWT_SECRET=your_secret_key
+MONGO_URI=your_mongodb_connection 
+JWT_SECRET=your_secret_key
 OPENROUTER_API_KEY=your_api_key
 
 Run backend:
