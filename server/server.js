@@ -18,6 +18,7 @@ app.use(
     origin: [
       "http://localhost:3000",
       "https://ai-mock-interview-fawn-five.vercel.app",
+      "https://ai-mock-interview-497fizg9j-snehareddy2112s-projects.vercel.app",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
