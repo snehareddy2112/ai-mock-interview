@@ -34,12 +34,14 @@ export default function InterviewSession() {
       if (data.isCompleted) return;
 
       if (data.questions.length > 0) {
-        const last =
-          data.questions[data.questions.length - 1];
-        setQuestion(
-          last.feedback?.nextQuestion || ""
-        );
-      }
+     const last = data.questions[data.questions.length - 1];
+
+     if (last.answer && last.answer.trim() !== "") {
+       setQuestion(last.feedback?.nextQuestion || "");
+     } else {
+       setQuestion(last.question); // 🔥 stay on same question
+     }
+     }
     };
 
     fetchSession();
