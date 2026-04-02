@@ -13,7 +13,7 @@ const app = express();
 app.use(express.json());
 
 // ✅ Proper CORS setup
-app.use(
+/*app.use(
   cors({
     origin: [
       "http://localhost:3000",
@@ -23,7 +23,22 @@ app.use(
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
+);*/
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || origin.includes("vercel.app")) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
 );
+
+// ✅ ALSO IMPORTANT
+app.options("*", cors());
 
 // Routes
 app.use("/api/auth", authRoutes);
