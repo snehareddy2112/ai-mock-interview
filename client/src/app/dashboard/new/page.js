@@ -34,7 +34,7 @@ export default function NewInterview() {
         skills,
       });
 
-      const firstQuestion = questionRes.data.question;
+      /*const firstQuestion = questionRes.data.question;
 
       // 3️⃣ Save first question directly into DB
       await api.post("/ai/evaluate", {
@@ -42,7 +42,7 @@ export default function NewInterview() {
         question: firstQuestion,
         answer: "Initial question (no answer yet)",
         sessionId: session._id,
-      });
+      });*/
 
       // 4️⃣ Redirect WITHOUT query param
       router.push(`/dashboard/interview/${session._id}`);
