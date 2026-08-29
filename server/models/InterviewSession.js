@@ -14,6 +14,33 @@ const interviewSchema = new mongoose.Schema(
 
     skills: {
       type: String,
+      default: "",
+    },
+
+    interviewType: {
+      type: String,
+      default: "Technical",
+      enum: ["Technical", "Behavioral (STAR)", "System Design", "HR & Cultural"],
+    },
+
+    targetCompany: {
+      type: String,
+      default: "General Tech",
+    },
+
+    targetQuestionsCount: {
+      type: Number,
+      default: 5,
+    },
+
+    jobDescription: {
+      type: String,
+      default: "",
+    },
+
+    currentQuestion: {
+      type: String,
+      default: "",
     },
 
     questions: [
@@ -26,9 +53,24 @@ const interviewSchema = new mongoose.Schema(
           type: String,
         },
 
+        timeTakenSeconds: {
+          type: Number,
+          default: 0,
+        },
+
         feedback: {
           score: {
             type: Number,
+          },
+
+          technicalAccuracy: {
+            type: Number,
+            default: 7,
+          },
+
+          communication: {
+            type: Number,
+            default: 7,
           },
 
           strengths: [

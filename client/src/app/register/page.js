@@ -2,67 +2,162 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import api from "@/lib/api";
+import { Sparkles, Lock, Mail, User, ArrowRight, CheckCircle2 } from "lucide-react";
 
 export default function Register() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const router = useRouter();
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    if (password.length < 6) {
+      setErrorMsg("Password must be at least 6 characters long.");
+      return;
+    }
 
     try {
-      await api.post("/auth/register", {
-        email,
+      setLoading(true);
+      const res = await api.post("/auth/register", {
+        name: name.trim(),
+        email: email.trim(),
         password,
       });
 
-      alert("Account created successfully!");
-      router.push("/login");
-
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token);
+        setSuccessMsg("Account created! Redirecting to your dashboard...");
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 1000);
+      } else {
+        setSuccessMsg("Account created successfully! Redirecting to login...");
+        setTimeout(() => {
+          router.push("/login");
+        }, 1500);
+      }
     } catch (err) {
-      alert("Registration failed");
+      console.error("Registration error:", err);
+      setErrorMsg(err.response?.data?.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-[#070B14] text-white flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Background glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-600/15 blur-[140px] pointer-events-none rounded-full"></div>
 
-      <form
-        onSubmit={handleRegister}
-        className="bg-white/5 border border-white/10 p-8 rounded-xl w-96"
-      >
-        <h1 className="text-2xl font-bold mb-6 text-center">
-          Register
-        </h1>
+      <div className="w-full max-w-md relative z-10">
+        {/* Brand */}
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-2.5 mb-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/25">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <span className="font-extrabold text-2xl tracking-tight text-white">
+              Interview<span className="text-purple-400">AI</span>
+            </span>
+          </Link>
+          <p className="text-gray-400 text-xs">
+            Start preparing for your upcoming technical interviews
+          </p>
+        </div>
 
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full p-3 mb-4 rounded-lg bg-gray-800 border border-gray-700"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+        {/* Card */}
+        <div className="bg-white/[0.03] border border-white/10 p-8 rounded-3xl shadow-2xl backdrop-blur-xl">
+          {errorMsg && (
+            <div className="mb-6 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex justify-between items-center">
+              <span>{errorMsg}</span>
+              <button onClick={() => setErrorMsg("")} className="font-bold ml-2">✕</button>
+            </div>
+          )}
 
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full p-3 mb-6 rounded-lg bg-gray-800 border border-gray-700"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+          {successMsg && (
+            <div className="mb-6 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>{successMsg}</span>
+            </div>
+          )}
 
-        <button
-          type="submit"
-          className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600"
-        >
-          Register
-        </button>
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+                Full Name (Optional)
+              </label>
+              <div className="relative">
+                <User className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="e.g. Alex Morgan"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-900 border border-gray-700 text-white text-sm focus:outline-none focus:border-purple-500 transition"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+            </div>
 
-      </form>
+            <div>
+              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+                Email Address *
+              </label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="email"
+                  placeholder="candidate@company.com"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-900 border border-gray-700 text-white text-sm focus:outline-none focus:border-purple-500 transition"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
+                Password (min 6 characters) *
+              </label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-900 border border-gray-700 text-white text-sm focus:outline-none focus:border-purple-500 transition"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 rounded-xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 transition text-white shadow-xl shadow-purple-500/25 disabled:opacity-50 text-sm flex items-center justify-center gap-2 mt-2"
+            >
+              <span>{loading ? "Creating Account..." : "Create Account →"}</span>
+            </button>
+          </form>
+
+          <div className="mt-6 pt-6 border-t border-white/10 text-center text-xs text-gray-400">
+            Already registered?{" "}
+            <Link href="/login" className="text-purple-400 hover:underline font-semibold">
+              Sign in to account
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
