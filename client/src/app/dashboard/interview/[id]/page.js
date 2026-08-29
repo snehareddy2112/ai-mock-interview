@@ -37,7 +37,8 @@ import {
 } from "recharts";
 
 export default function InterviewSession() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id;
   const router = useRouter();
 
   const [session, setSession] = useState(null);
@@ -70,11 +71,16 @@ export default function InterviewSession() {
 
   // Fetch session details
   useEffect(() => {
+    if (!id) return;
+    let isMounted = true;
+
     const fetchSession = async () => {
       try {
         setErrorMsg("");
         const res = await api.get(`/interviews/${id}`);
         const data = res.data;
+        if (!isMounted) return;
+
         setSession(data);
 
         if (data.isCompleted) {
@@ -82,20 +88,31 @@ export default function InterviewSession() {
           return;
         }
 
-        // Set the active question without dummy submissions
-        if (data.currentQuestion) {
-          setQuestion(data.currentQuestion);
-        } else if (data.questions && data.questions.length > 0) {
+        // Determine active question
+        let activeQ = (data.currentQuestion && data.currentQuestion.trim()) || "";
+        if (!activeQ && data.questions && data.questions.length > 0) {
           const last = data.questions[data.questions.length - 1];
-          setQuestion(last.feedback?.nextQuestion || last.question || "");
+          activeQ = last.feedback?.nextQuestion || last.question || "";
         }
+
+        // Safe fallback so candidate is never stuck on a blank screen
+        if (!activeQ) {
+          activeQ = `Can you introduce yourself and walk me through your background with ${data.skills || data.role || "software engineering"}?`;
+        }
+
+        setQuestion(activeQ);
       } catch (err) {
         console.error("Failed to load session:", err);
-        setErrorMsg(err.response?.data?.message || "Failed to load interview session.");
+        if (isMounted) {
+          setErrorMsg(err.response?.data?.message || "Failed to load interview session.");
+        }
       }
     };
 
     fetchSession();
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
   // Speech Recognition setup (Voice-to-Text)
@@ -190,13 +207,14 @@ export default function InterviewSession() {
 
       const res = await api.post("/ai/evaluate", {
         role: session.role,
-        question,
+        question: question || session.currentQuestion || "Interview Question",
         answer: answer.trim(),
         sessionId: id,
         timeTakenSeconds: seconds,
       });
 
-      setQuestion(res.data.nextQuestion);
+      const nextQ = res.data.nextQuestion || "Can you elaborate on how you would test and validate this in production?";
+      setQuestion(nextQ);
       setAnswer("");
       setSeconds(0); // reset question timer
 
@@ -269,24 +287,24 @@ export default function InterviewSession() {
     );
   }
 
-  const averageStrengths = session.questions.flatMap(
+  const averageStrengths = (session.questions || []).flatMap(
     (q) => q.feedback?.strengths || []
   );
 
-  const averageImprovements = session.questions.flatMap(
+  const averageImprovements = (session.questions || []).flatMap(
     (q) => q.feedback?.improvements || []
   );
 
   const score = session.finalScore || 0;
 
-  const avgTechnical = session.questions.length
+  const avgTechnical = session.questions?.length
     ? Math.round(
         session.questions.reduce((sum, q) => sum + (q.feedback?.technicalAccuracy || q.feedback?.score || 7), 0) /
           session.questions.length
       )
     : 7;
 
-  const avgCommunication = session.questions.length
+  const avgCommunication = session.questions?.length
     ? Math.round(
         session.questions.reduce((sum, q) => sum + (q.feedback?.communication || q.feedback?.score || 7), 0) /
           session.questions.length
@@ -335,7 +353,7 @@ export default function InterviewSession() {
   };
 
   const performance = getPerformanceMeta();
-  const currentQuestionNumber = session.questions.length + 1;
+  const currentQuestionNumber = (session.questions?.length || 0) + 1;
   const totalTarget = session.targetQuestionsCount || 5;
 
   return (
@@ -445,7 +463,7 @@ export default function InterviewSession() {
 
               <div className="p-4 rounded-xl bg-black/30 border border-white/5">
                 <span className="text-xs text-gray-400">Questions Completed</span>
-                <p className="text-2xl font-bold text-emerald-400 mt-1">{session.questions.length}</p>
+                <p className="text-2xl font-bold text-emerald-400 mt-1">{session.questions?.length || 0}</p>
                 <span className="text-[10px] text-gray-400">Full loop completed</span>
               </div>
             </div>
@@ -502,7 +520,7 @@ export default function InterviewSession() {
       )}
 
       {/* ACTIVE INTERVIEW: Current Question Card */}
-      {!session.isCompleted && question && (
+      {!session.isCompleted && (
         <div className="bg-[#0D1322] border border-purple-500/30 rounded-3xl p-6 md:p-8 mb-8 shadow-2xl shadow-purple-500/10">
           {/* Progress Bar & Badges */}
           <div className="flex items-center justify-between mb-4">
@@ -513,24 +531,33 @@ export default function InterviewSession() {
               <span className="text-xs text-gray-400">AI Interviewer</span>
             </div>
 
-            <button
-              onClick={speaking ? stopSpeaking : speakQuestion}
-              className={`text-xs px-3.5 py-1.5 rounded-xl border transition flex items-center gap-1.5 ${
-                speaking
-                  ? "bg-purple-600 border-purple-500 text-white animate-pulse"
-                  : "bg-white/5 border-white/10 text-purple-300 hover:bg-white/10"
-              }`}
-            >
-              {speaking ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-              <span>{speaking ? "Stop Audio" : "Listen to Question"}</span>
-            </button>
+            {question && (
+              <button
+                onClick={speaking ? stopSpeaking : speakQuestion}
+                className={`text-xs px-3.5 py-1.5 rounded-xl border transition flex items-center gap-1.5 ${
+                  speaking
+                    ? "bg-purple-600 border-purple-500 text-white animate-pulse"
+                    : "bg-white/5 border-white/10 text-purple-300 hover:bg-white/10"
+                }`}
+              >
+                {speaking ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                <span>{speaking ? "Stop Audio" : "Listen to Question"}</span>
+              </button>
+            )}
           </div>
 
           {/* Question Text */}
-          <div className="p-5 rounded-2xl bg-purple-950/20 border border-purple-500/20 mb-6">
-            <p className="text-lg md:text-xl font-semibold text-white leading-relaxed">
-              {question}
-            </p>
+          <div className="p-5 rounded-2xl bg-purple-950/20 border border-purple-500/20 mb-6 min-h-[90px] flex items-center">
+            {question ? (
+              <p className="text-lg md:text-xl font-semibold text-white leading-relaxed">
+                {question}
+              </p>
+            ) : (
+              <div className="flex items-center gap-3 text-purple-300 animate-pulse text-sm">
+                <div className="w-5 h-5 rounded-full border-2 border-purple-400 border-t-transparent animate-spin"></div>
+                <span>Generating your technical interview question...</span>
+              </div>
+            )}
           </div>
 
           {/* Answer Area */}
@@ -583,7 +610,7 @@ export default function InterviewSession() {
                   <span>{loading ? "Evaluating Answer..." : "Submit Answer →"}</span>
                 </button>
 
-                {session.questions.length > 0 && (
+                {session.questions && session.questions.length > 0 && (
                   <button
                     type="button"
                     onClick={handleComplete}
@@ -600,7 +627,7 @@ export default function InterviewSession() {
       )}
 
       {/* Answered Questions Progression History */}
-      {session.questions.length > 0 && (
+      {session.questions && session.questions.length > 0 && (
         <div className="space-y-6 mb-12">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-200">
@@ -684,7 +711,7 @@ export default function InterviewSession() {
       )}
 
       {/* Score Progression Graph */}
-      {session.questions.length > 0 && (
+      {session.questions && session.questions.length > 0 && (
         <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">

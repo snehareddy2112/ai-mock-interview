@@ -78,6 +78,25 @@ router.get("/:id", authMiddleware, async (req, res) => {
       return res.status(404).json({ message: "Session not found" });
     }
 
+    // Guarantee that an active session always has a question to display
+    if (
+      !session.isCompleted &&
+      (!session.currentQuestion || session.currentQuestion.trim() === "") &&
+      (!session.questions || session.questions.length === 0)
+    ) {
+      const generatedQ = await fetchFirstQuestion({
+        role: session.role,
+        experienceLevel: session.experienceLevel,
+        skills: session.skills,
+        interviewType: session.interviewType,
+        targetCompany: session.targetCompany,
+        jobDescription: session.jobDescription,
+      });
+
+      session.currentQuestion = generatedQ;
+      await session.save();
+    }
+
     res.json(session);
   } catch (error) {
     console.error("Get session by id error:", error);
